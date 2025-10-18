@@ -1,12 +1,15 @@
 package driwai.updater.core;
 
+import driwai.updater.ui.InformationWindow;
 import org.update4j.Configuration;
 import org.update4j.FileMetadata;
 import driwai.updater.ui.UIUpdater;
 
-
+import org.json.JSONArray;
+import org.json.JSONObject;
 import javax.swing.*;
 import java.io.*;
+import java.net.URL;
 import java.nio.file.*;
 
 public class UpdateManager {
@@ -20,15 +23,32 @@ public class UpdateManager {
     /**
      * Pregunta si se desea actualizar
      */
+
+
     public boolean askForUpdate() {
-        int result = JOptionPane.showConfirmDialog(
-                null,
-                "Se encontró una nueva versión de " + AppConfig.APP_NAME + ".\n¿Desea actualizar ahora?",
-                "Actualización disponible",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-        return result == JOptionPane.YES_OPTION;
+        Object[] options = {"Sí", "No", "Más info"};
+        InformationWindow informationWindow = new InformationWindow();
+        Object selectedValue= informationWindow.InformationUpdate(options);
+        if (selectedValue == null) return false;
+
+        if (selectedValue.equals("Más info")) {
+            try {
+                // Leer JSON desde la URL
+                URL url = new URL(AppConfig.INFORMATION_UPDATE);
+                ConfigService configService = new ConfigService();
+                String info= configService.loadJson(url);
+               informationWindow.informationUpdate(info,null);
+
+            } catch (Exception e) {
+                informationWindow.informationUpdate("No se pudo obtener la información: ",e);
+
+            }
+
+            // Volver a mostrar la ventana principal de actualización
+            return askForUpdate();
+        }
+
+        return selectedValue.equals("Sí");
     }
 
     /**
