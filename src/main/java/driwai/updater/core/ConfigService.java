@@ -17,7 +17,7 @@ public class ConfigService {
     }
 
     public String  loadJson(URL url) throws Exception{
-        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(),"UTF-8"));
         StringBuilder jsonContent = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {

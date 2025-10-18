@@ -3,6 +3,7 @@ package driwai.updater.ui;
 import driwai.updater.core.AppConfig;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class InformationWindow  extends JFrame {
 
