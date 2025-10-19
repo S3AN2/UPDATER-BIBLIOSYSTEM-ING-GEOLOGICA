@@ -35,7 +35,7 @@ public class ConfigService {
 
         // Construir texto con formato
         StringBuilder info = new StringBuilder();
-        info.append("Nombre de la versión: ").append(releaseName).append("\n");
+        info.append("Nombre: ").append(releaseName).append("\n");
         info.append("Versión: ").append(version).append("\n");
         info.append("Fecha de lanzamiento: ").append(releaseDate).append("\n");
         info.append("Autor: ").append(author).append("\n\n");

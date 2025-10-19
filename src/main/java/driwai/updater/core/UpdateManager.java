@@ -5,9 +5,7 @@ import org.update4j.Configuration;
 import org.update4j.FileMetadata;
 import driwai.updater.ui.UIUpdater;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import javax.swing.*;
+
 import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
@@ -58,7 +56,14 @@ public class UpdateManager {
         try {
             Path appDir = Paths.get("app");
             if (!Files.exists(appDir)) Files.createDirectories(appDir);
-
+            try {
+                if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                    Files.setAttribute(appDir, "dos:hidden", true);
+                    System.out.println("✅ Carpeta 'app' oculta correctamente en Windows.");
+                }
+            } catch (IOException e) {
+                System.out.println("❌ No se pudo ocultar la carpeta: " + e.getMessage());
+            }
             for (FileMetadata file : config.getFiles()) {
                 if (AppConfig.cancelExecution) {
                     ui.updateStatus("❌ Actualización cancelada por el usuario.");
@@ -85,13 +90,11 @@ public class UpdateManager {
             ui.updateStatus("❌ Error durante la actualización: " + e.getMessage());
         }
     }
-
     /**
      * Descarga un solo archivo con estadísticas de progreso.
      */
     private void downloadFile(FileMetadata file, Path outputPath, UIUpdater ui) {
         InputStream in = null;
-
         try {
             Files.createDirectories(outputPath.getParent());
             in = file.getUri().toURL().openStream();
