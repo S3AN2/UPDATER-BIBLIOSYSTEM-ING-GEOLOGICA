@@ -20,16 +20,6 @@ public class UpdaterApplication {
 		try {
 			AppConfig.setupLaf();
 			new LoadingScreen("Verificando actualizaciones...").show(2500);
-
-//			ConfigService configService = new ConfigService();
-//			var config = configService.loadRemoteConfig(AppConfig.CONFIG_URL);
-//			System.out.print("ESTO ES LA LECTURA"+ config);
-//
-//			if(){}
-//
-
-
-
 			URL configUrl = new URL(AppConfig.CONFIG_URL);
 			Configuration config;
 			try (Reader reader = new InputStreamReader(configUrl.openStream())) {
