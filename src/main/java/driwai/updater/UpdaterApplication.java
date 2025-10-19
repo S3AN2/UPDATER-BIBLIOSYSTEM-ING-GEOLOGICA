@@ -20,6 +20,7 @@ public class UpdaterApplication {
 		try {
 			AppConfig.setupLaf();
 			new LoadingScreen("Verificando actualizaciones...").show(2500);
+
 			URL configUrl = new URL(AppConfig.CONFIG_URL);
 			Configuration config;
 			try (Reader reader = new InputStreamReader(configUrl.openStream())) {
@@ -37,31 +38,36 @@ public class UpdaterApplication {
 				System.out.println("   Tamaño local: " + localSize + " bytes");
 
 				if (!Files.exists(localPath) || localSize != file.getSize()) {
+					System.out.println("🧾compara q cosa" +needsUpdate);
 					needsUpdate = true;
+					System.out.println("🧾compara q cos222a" +needsUpdate);
 				}
 			}
 
 
 			UpdateManager manager = new UpdateManager(config);
 			// Preguntar si desea actualizar
-			if(needsUpdate){
-				if (manager.askForUpdate()) {
+			if (needsUpdate) {
+				UpdateAction action = manager.askForUpdate();
+
+				if (action == UpdateAction.UPDATE) {
 					UpdateWindow window = new UpdateWindow(AppConfig.APP_NAME, AppConfig.COPYRIGHT);
 					manager.downloadUpdates(window);
 					window.close();
 
-					// 🚫 Si canceló, salir sin ejecutar el programa
 					if (AppConfig.cancelExecution) {
-						System.out.println("❌ Actualización cancelada por el usuario. Cerrando aplicación...");
 						System.exit(0);
 					}
-
-				} else {
-					System.out.println("⏹️ Actualización cancelada por el usuario.");
+				}
+				else if (action == UpdateAction.SKIP) {
+					System.out.println("⏭ Se omitió la actualización. Iniciando programa...");
+				}
+				else {
+					System.out.println("❌ Acción cancelada. Cerrando.");
 					System.exit(0);
 				}
-
 			}
+
 
 			// 🚀 Solo se ejecuta si NO canceló
 			new ProcessLauncher(AppConfig.APP_NAME_JAR).launchApp();

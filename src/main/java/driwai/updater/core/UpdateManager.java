@@ -23,31 +23,36 @@ public class UpdateManager {
      */
 
 
-    public boolean askForUpdate() {
-        Object[] options = {"Sí", "No", "Más info"};
-        InformationWindow informationWindow = new InformationWindow();
-        Object selectedValue= informationWindow.InformationUpdate(options);
-        if (selectedValue == null) return false;
+    public UpdateAction askForUpdate() {
+        Object[] options = {"Actualizar", "Omitir", "Más info"};
 
-        if (selectedValue.equals("Más info")) {
+        InformationWindow informationWindow = new InformationWindow();
+        Object selectedValue = informationWindow.InformationUpdate(options);
+        if (selectedValue == null) return UpdateAction.CANCEL;
+
+        if ("Más info".equals(selectedValue)) {
             try {
-                // Leer JSON desde la URL
                 URL url = new URL(AppConfig.INFORMATION_UPDATE);
                 ConfigService configService = new ConfigService();
-                String info= configService.loadJson(url);
-               informationWindow.informationUpdate(info,null);
-
+                String info = configService.loadJson(url);
+                informationWindow.informationUpdate(info, null);
             } catch (Exception e) {
-                informationWindow.informationUpdate("No se pudo obtener la información: ",e);
-
+                informationWindow.informationUpdate("No se pudo obtener la información", e);
             }
-
-            // Volver a mostrar la ventana principal de actualización
-            return askForUpdate();
+            return askForUpdate(); // volver a preguntar
         }
 
-        return selectedValue.equals("Sí");
+        if ("Actualizar".equals(selectedValue)) {
+            return UpdateAction.UPDATE;
+        }
+
+        if ("Omitir".equals(selectedValue)) {
+            return UpdateAction.SKIP;
+        }
+
+        return UpdateAction.CANCEL;
     }
+
 
     /**
      * Descarga todos los archivos necesarios con progreso y cancelación.
