@@ -12,6 +12,7 @@ import java.nio.file.*;
 
 public class UpdateManager {
 
+
     private final Configuration config;
 
     public UpdateManager(Configuration config) {
@@ -64,7 +65,7 @@ public class UpdateManager {
             try {
                 if (System.getProperty("os.name").toLowerCase().contains("win")) {
                     Files.setAttribute(appDir, "dos:hidden", true);
-                    System.out.println("✅ Carpeta 'app' oculta correctamente en Windows.");
+
                 }
             } catch (IOException e) {
                 System.out.println("❌ No se pudo ocultar la carpeta: " + e.getMessage());
@@ -100,11 +101,13 @@ public class UpdateManager {
      */
     private void downloadFile(FileMetadata file, Path outputPath, UIUpdater ui) {
         InputStream in = null;
+        Path tempPath = outputPath.resolveSibling(outputPath.getFileName() + ".tmp");
         try {
             Files.createDirectories(outputPath.getParent());
             in = file.getUri().toURL().openStream();
 
-            try (FileOutputStream out = new FileOutputStream(outputPath.toFile())) {
+            // Descargar a archivo temporal primero
+            try (FileOutputStream out = new FileOutputStream(tempPath.toFile())) {
                 long startTime = System.currentTimeMillis();
                 byte[] buffer = new byte[8192];
                 long totalRead = 0;
@@ -112,15 +115,13 @@ public class UpdateManager {
                 int bytesRead;
 
                 while ((bytesRead = in.read(buffer)) != -1) {
-                    // 👇 Verifica cancelación global
                     if (AppConfig.cancelExecution) {
-                        ui.updateStatus("⚠️ Descarga cancelada por el usuario.");
+                        ui.updateStatus("⚠️ Descarga cancelada.");
                         break;
                     }
 
                     out.write(buffer, 0, bytesRead);
                     totalRead += bytesRead;
-
                     // Calcular estadísticas
                     long elapsed = System.currentTimeMillis() - startTime;
                     double speedKBps = totalRead / 1024.0 / (elapsed / 1000.0 + 0.1);
@@ -128,27 +129,32 @@ public class UpdateManager {
                     int remainingSeconds = (int) (remainingBytes / 1024.0 / (speedKBps + 0.1));
                     int percent = (int) ((totalRead * 100) / totalSize);
 
+
                     // Actualizar UI con progreso
                     String status = String.format("⬇️ %s: %d%% (%.1f KB/s, %ds restantes)",
                             outputPath.getFileName(), percent, speedKBps, remainingSeconds);
 
                     ui.updateProgress(percent, status);
-                }
-
-                if (!AppConfig.cancelExecution) {
-                    ui.updateProgress(100, "✅ Descargado: " + outputPath.getFileName());
-                } else {
-                    // ❌ Limpia el archivo incompleto
-                    Files.deleteIfExists(outputPath);
+//                    ui.updateProgress(percent, "Descargando " + outputPath.getFileName());
                 }
             }
 
+            // ✅ Validación del tamaño
+            long downloadedSize = Files.size(tempPath);
+            if (downloadedSize == file.getSize()) {
+                Files.move(tempPath, outputPath, StandardCopyOption.REPLACE_EXISTING);
+                ui.updateStatus("✅ Actualizado: " + outputPath.getFileName());
+            } else {
+                Files.deleteIfExists(tempPath);
+                ui.updateStatus("❌ Tamaño incorrecto, descarga fallida para " + outputPath.getFileName());
+            }
+
         } catch (IOException e) {
-            ui.updateStatus("❌ Error al descargar: " + outputPath.getFileName() + " (" + e.getMessage() + ")");
+            ui.updateStatus("❌ Error al descargar: " + e.getMessage());
+            try { Files.deleteIfExists(tempPath); } catch (IOException ignored) {}
         } finally {
-            try {
-                if (in != null) in.close();
-            } catch (IOException ignored) {}
+            try { if (in != null) in.close(); } catch (IOException ignored) {}
         }
     }
+
 }

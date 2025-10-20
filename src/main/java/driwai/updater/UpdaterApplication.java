@@ -19,6 +19,7 @@ public class UpdaterApplication {
 
 		try {
 			AppConfig.setupLaf();
+
 			new LoadingScreen("Verificando actualizaciones...").show(2500);
 
 			URL configUrl = new URL(AppConfig.CONFIG_URL);
@@ -38,9 +39,7 @@ public class UpdaterApplication {
 				System.out.println("   Tamaño local: " + localSize + " bytes");
 
 				if (!Files.exists(localPath) || localSize != file.getSize()) {
-					System.out.println("🧾compara q cosa" +needsUpdate);
 					needsUpdate = true;
-					System.out.println("🧾compara q cos222a" +needsUpdate);
 				}
 			}
 
@@ -68,9 +67,21 @@ public class UpdaterApplication {
 				}
 			}
 
+// ✅ Validar que el archivo principal existe ANTES de intentar ejecutarlo
+			Path mainJarPath = Paths.get("app", AppConfig.APP_NAME_JAR);
+			if (!Files.exists(mainJarPath)) {
+				javax.swing.JOptionPane.showMessageDialog(null,
+						"❌ Error crítico: falta el archivo necesario para ejecutar la aplicación.\n" +
+								"Por favor, ejecute la actualización o reinstale el programa.",
+						"Archivo faltante",
+						javax.swing.JOptionPane.ERROR_MESSAGE
+				);
+				System.exit(1);
+			}
 
-			// 🚀 Solo se ejecuta si NO canceló
+// 🚀 Solo se ejecuta si NO canceló y existe el JAR
 			new ProcessLauncher(AppConfig.APP_NAME_JAR).launchApp();
+
 
 		} catch (Exception e) {
 			e.printStackTrace();
